@@ -94,6 +94,6 @@ public class Order {
     }
 
     public enum PaymentMethod {
-        CREDIT_CARD, VNPAY, CASH_ON_DELIVERY
+        CREDIT_CARD, VNPAY, COD,
     }
 }

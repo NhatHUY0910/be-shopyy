@@ -16,7 +16,8 @@ public class CreateOrderRequestDto {
     private String fullName;
     private String phoneNumber;
     private String address;
-    private List<Long> productIds;
-    private List<Integer> quantities;
+//    private List<Long> productIds;
+//    private List<Integer> quantities;
     private Order.PaymentMethod paymentMethod;
+    private List<OrderItemDto> orderItems;
 }

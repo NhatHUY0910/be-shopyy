@@ -24,4 +24,5 @@ public class OrderResponseDto {
     private List<OrderItemDto> orderItems;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String paymentUrl;  // New field for VNPay payment URL
 }

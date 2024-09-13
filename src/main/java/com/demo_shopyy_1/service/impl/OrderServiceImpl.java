@@ -50,8 +50,10 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderResponseDto createOrder(CreateOrderRequestDto requestDto, HttpServletRequest request) throws UnsupportedEncodingException {
+        log.info("Creating order with data: {}", requestDto);
         User currentUser = userService.getCurrentUser();
         Order order = createOrderFromRequest(currentUser, requestDto);
+        log.info("Order created: {}", order);
 
         // Kiểm tra số lượng tồn kho trước khi tạo đơn hàng
         for (OrderItem item : order.getOrderItems()) {
@@ -69,16 +71,22 @@ public class OrderServiceImpl implements OrderService {
             String paymentUrl = vnPayService.createPaymentUrl(request, order);
             order.setVnpayPaymentUrl(paymentUrl);
             orderRepository.save(order);
+
+            OrderResponseDto responseDto = convertToOrderResponseDto(order);
+            responseDto.setPaymentUrl(paymentUrl);
+            return responseDto;
         }
 
         return convertToOrderResponseDto(order);
     }
 
     private Order createOrderFromRequest(User user, CreateOrderRequestDto requestDto) {
-        User currentUser = userService.getCurrentUser();
+//        User currentUser = userService.getCurrentUser();
+//        log.info("Current user: {}", currentUser);
 
         Order order = new Order();
-        order.setUser(currentUser);
+//        order.setUser(currentUser);
+        order.setUser(user);
         order.setOrderCode(generateOrderCode());
         order.setFullName(requestDto.getFullName());
         order.setPhoneNumber(requestDto.getPhoneNumber());
@@ -87,12 +95,12 @@ public class OrderServiceImpl implements OrderService {
         order.setPaymentStatus(Order.PaymentStatus.PENDING);
         order.setPaymentMethod(requestDto.getPaymentMethod());
         order.setOrderDate(LocalDateTime.now());
-        // ... set order fields
+
         List<OrderItem> orderItems = new ArrayList<>();
         BigDecimal totalAmount = BigDecimal.ZERO;
 
-        for (int i = 0; i < requestDto.getProductIds().size(); i++) {
-            OrderItem orderItem = createOrderItem(requestDto.getProductIds().get(i), requestDto.getQuantities().get(i), order);
+        for (OrderItemDto itemDto : requestDto.getOrderItems()) {
+            OrderItem orderItem = createOrderItem(itemDto.getProductId(), itemDto.getQuantity(), order);
             orderItems.add(orderItem);
             totalAmount = totalAmount.add(orderItem.getSubtotal());
         }
@@ -105,6 +113,9 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private OrderItem createOrderItem(Long productId, Integer quantity, Order order) {
+        if (productId == null) {
+            throw new IllegalArgumentException("ProductId cannot be null");
+        }
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
