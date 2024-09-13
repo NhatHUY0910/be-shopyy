@@ -95,6 +95,7 @@ public class VNPayService {
         String vnp_SecureHash = hmacSHA512(vnPayConfig.getHashSecret(), hashData.toString());
         queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
         String paymentUrl = vnPayConfig.getPaymentUrl() + "?" + queryUrl;
+        logger.info("Generated VNPay URL: " + paymentUrl);
         return paymentUrl;
     }
 
