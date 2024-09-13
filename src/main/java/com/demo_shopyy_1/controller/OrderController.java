@@ -35,14 +35,19 @@ public class OrderController {
     private VNPayService vnPayService;
 
     @PostMapping
-    public ResponseEntity<OrderResponseDto> createOrder(@Valid @RequestBody CreateOrderRequestDto requestDto,
-                                                        HttpServletRequest request) {
+    public ResponseEntity<?> createOrder(@Valid @RequestBody CreateOrderRequestDto requestDto,
+                                         HttpServletRequest request) {
+        log.info("Received order request: {}", requestDto);
         try {
             OrderResponseDto responseDto = orderService.createOrder(requestDto, request);
+            log.info("Order created successfully: {}", responseDto);
             return ResponseEntity.ok(responseDto);
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid input data", e);
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
             log.error("Error creating order", e);
-            return ResponseEntity.badRequest().body(null);
+            return ResponseEntity.internalServerError().body("An unexpected error occurred");
         }
     }
 
