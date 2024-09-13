@@ -11,6 +11,7 @@ import com.demo_shopyy_1.model.dto.OrderResponseDto;
 import com.demo_shopyy_1.repository.OrderRepository;
 import com.demo_shopyy_1.repository.ProductRepository;
 import com.demo_shopyy_1.repository.UserRepository;
+import com.demo_shopyy_1.service.ICartService;
 import com.demo_shopyy_1.service.IUserService;
 import com.demo_shopyy_1.service.OrderService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -47,6 +48,9 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private VNPayService vnPayService;
 
+    @Autowired
+    private ICartService cartService;
+
     @Override
     @Transactional
     public OrderResponseDto createOrder(CreateOrderRequestDto requestDto, HttpServletRequest request) throws UnsupportedEncodingException {
@@ -66,6 +70,10 @@ public class OrderServiceImpl implements OrderService {
         }
 
         orderRepository.save(order);
+
+        for(OrderItem item : order.getOrderItems()) {
+            cartService.removeCartItem(currentUser, item.getProduct().getId());
+        }
 
         if (requestDto.getPaymentMethod() == Order.PaymentMethod.VNPAY) {
             String paymentUrl = vnPayService.createPaymentUrl(request, order);
