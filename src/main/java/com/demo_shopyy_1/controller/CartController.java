@@ -4,8 +4,8 @@ import com.demo_shopyy_1.model.dto.CartDtoConverter;
 import com.demo_shopyy_1.model.User;
 import com.demo_shopyy_1.model.dto.AddToCartDto;
 import com.demo_shopyy_1.model.dto.CartDto;
-import com.demo_shopyy_1.service.ICartService;
-import com.demo_shopyy_1.service.IUserService;
+import com.demo_shopyy_1.service.CartService;
+import com.demo_shopyy_1.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,10 +16,10 @@ import org.springframework.web.bind.annotation.*;
 public class CartController {
 
     @Autowired
-    private ICartService cartService;
+    private CartService cartService;
 
     @Autowired
-    private IUserService userService;
+    private UserService userService;
 
     @Autowired
     private CartDtoConverter cartDtoConverter;

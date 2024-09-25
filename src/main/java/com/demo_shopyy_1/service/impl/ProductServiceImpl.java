@@ -5,13 +5,14 @@ import com.demo_shopyy_1.model.Product;
 import com.demo_shopyy_1.model.dto.ProductDto;
 import com.demo_shopyy_1.repository.CategoryRepository;
 import com.demo_shopyy_1.repository.ProductRepository;
-import com.demo_shopyy_1.service.IProductService;
+import com.demo_shopyy_1.service.ProductService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,13 +22,17 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-public class ProductServiceImpl implements IProductService {
+public class ProductServiceImpl implements ProductService {
+    private static final Logger log = LoggerFactory.getLogger(ProductServiceImpl.class);
 
     @Autowired
     private ProductRepository productRepository;
 
     @Autowired
     private CategoryRepository categoryRepository;
+
+    @Autowired
+    private FirebaseStorageService firebaseStorageService;
 
     @Value("${upload.path}")
     private String uploadPath;
@@ -44,14 +49,43 @@ public class ProductServiceImpl implements IProductService {
 
     @Override
     public Product createProduct(ProductDto productDto) {
+        log.info("Starting product creation process for: {}", productDto.getName());
+        log.info("Image file: {}", productDto.getImageFile() != null ? productDto.getImageFile().getOriginalFilename() : "No file");
+
         Product product = new Product();
         updateProductFromDto(product, productDto);
+        log.debug("Updated product details from DTO: {}", product);
 
         if (productDto.getImageFile() != null && !productDto.getImageFile().isEmpty()) {
-            String fileName = saveImage(productDto.getImageFile());
-            product.setImageUrl(fileName);
+            try {
+                log.info("Uploading file: {}", productDto.getImageFile().getOriginalFilename());
+                String imageUrl = firebaseStorageService.uploadFile(productDto.getImageFile());
+                log.info("File uploaded successfully, URL: {}", imageUrl);
+                product.setImageUrl(imageUrl);
+            } catch (IOException e) {
+                log.error("Failed to upload image file for product: {}", productDto.getName(), e);
+                throw new RuntimeException("Failed to upload image file", e);
+            }
+        } else {
+            log.info("No image file provided for product: {}", productDto.getName());
         }
-        return productRepository.save(product);
+
+        if (productDto.getCategoryId() != null) {
+            try {
+                Category category = categoryRepository.findById(productDto.getCategoryId())
+                        .orElseThrow(() -> new RuntimeException("Category not found"));
+                product.setCategory(category);
+                log.debug("Category set for product: {}", category.getName());
+            } catch (RuntimeException e) {
+                log.error("Category not found for ID: {}", productDto.getCategoryId(), e);
+                throw e;
+            }
+        }
+
+        Product savedProduct = productRepository.save(product);
+        log.info("Product created successfully with ID: {}", savedProduct.getId());
+
+        return savedProduct;
     }
 
     @Override
@@ -62,12 +96,27 @@ public class ProductServiceImpl implements IProductService {
             updateProductFromDto(product, productDto);
 
             if (productDto.getImageFile() != null && !productDto.getImageFile().isEmpty()) {
-                String fileName = saveImage(productDto.getImageFile());
-                product.setImageUrl(fileName);
+                try {
+                    String newImageUrl = firebaseStorageService.uploadFile(productDto.getImageFile());
+                    // If new image upload is successful, delete the old image
+                    if (product.getImageUrl() != null) {
+                        String oldFileName = extractFileNameFromUrl(product.getImageUrl());
+                        firebaseStorageService.deleteFile(oldFileName);
+                    }
+                    product.setImageUrl(newImageUrl);
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to upload image file", e);
+                }
             }
             return productRepository.save(product);
         }
         return null;
+    }
+
+    private String extractFileNameFromUrl(String url) {
+        // Implement this method to extract the file name from the Firebase URL
+        // This might depend on how your Firebase URLs are structured
+        return url.substring(url.lastIndexOf('/') + 1);
     }
 
     @Override
@@ -86,7 +135,6 @@ public class ProductServiceImpl implements IProductService {
             Category category = categoryRepository.findById(productDto.getCategoryId()).orElseThrow(() -> new RuntimeException("Category not found"));
             product.setCategory(category);
         }
-
     }
 
     private String saveImage(MultipartFile imageFile) {
