@@ -4,15 +4,14 @@ import com.demo_shopyy_1.model.Order;
 import com.demo_shopyy_1.model.OrderItem;
 import com.demo_shopyy_1.model.Product;
 import com.demo_shopyy_1.model.User;
-import com.demo_shopyy_1.model.dto.CreateOrderDto;
 import com.demo_shopyy_1.model.dto.CreateOrderRequestDto;
 import com.demo_shopyy_1.model.dto.OrderItemDto;
 import com.demo_shopyy_1.model.dto.OrderResponseDto;
 import com.demo_shopyy_1.repository.OrderRepository;
 import com.demo_shopyy_1.repository.ProductRepository;
 import com.demo_shopyy_1.repository.UserRepository;
-import com.demo_shopyy_1.service.ICartService;
-import com.demo_shopyy_1.service.IUserService;
+import com.demo_shopyy_1.service.CartService;
+import com.demo_shopyy_1.service.UserService;
 import com.demo_shopyy_1.service.OrderService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -43,13 +42,13 @@ public class OrderServiceImpl implements OrderService {
     private UserRepository userRepository;
 
     @Autowired
-    private IUserService userService;
+    private UserService userService;
 
     @Autowired
     private VNPayService vnPayService;
 
     @Autowired
-    private ICartService cartService;
+    private CartService cartService;
 
     @Override
     @Transactional

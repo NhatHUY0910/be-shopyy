@@ -10,7 +10,7 @@ import com.demo_shopyy_1.model.dto.CartDto;
 import com.demo_shopyy_1.repository.CartRepository;
 import com.demo_shopyy_1.repository.ProductRepository;
 import com.demo_shopyy_1.repository.UserRepository;
-import com.demo_shopyy_1.service.ICartService;
+import com.demo_shopyy_1.service.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 
 @Service
-public class CartServiceImpl implements ICartService {
+public class CartServiceImpl implements CartService {
 
     @Autowired
     private CartRepository cartRepository;

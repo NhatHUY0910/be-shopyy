@@ -15,7 +15,7 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 @Table(name = "categories")
-@JsonIgnoreProperties({"products"})
+//@JsonIgnoreProperties({"products"})
 public class Category {
 
     @Id

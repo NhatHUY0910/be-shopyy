@@ -3,9 +3,8 @@ package com.demo_shopyy_1.controller;
 import com.demo_shopyy_1.model.User;
 import com.demo_shopyy_1.model.dto.LoginDto;
 import com.demo_shopyy_1.security.JwtTokenProvider;
-import com.demo_shopyy_1.service.IUserService;
+import com.demo_shopyy_1.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -30,7 +29,7 @@ public class AuthController {
     private JwtTokenProvider jwtTokenProvider;
 
     @Autowired
-    private IUserService userService;
+    private UserService userService;
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody User user) {

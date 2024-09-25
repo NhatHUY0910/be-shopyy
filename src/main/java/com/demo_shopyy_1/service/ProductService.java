@@ -6,7 +6,7 @@ import com.demo_shopyy_1.model.dto.ProductDto;
 import java.util.List;
 import java.util.Optional;
 
-public interface IProductService {
+public interface ProductService {
     List<Product> getAllProducts();
     Optional<Product> getProductById(Long id);
     Product createProduct(ProductDto productDto);

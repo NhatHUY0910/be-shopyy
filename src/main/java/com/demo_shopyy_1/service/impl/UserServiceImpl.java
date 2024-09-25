@@ -3,7 +3,7 @@ package com.demo_shopyy_1.service.impl;
 import com.demo_shopyy_1.model.Cart;
 import com.demo_shopyy_1.model.User;
 import com.demo_shopyy_1.repository.UserRepository;
-import com.demo_shopyy_1.service.IUserService;
+import com.demo_shopyy_1.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
-public class UserServiceImpl implements IUserService {
+public class UserServiceImpl implements UserService {
     private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
 
     @Autowired

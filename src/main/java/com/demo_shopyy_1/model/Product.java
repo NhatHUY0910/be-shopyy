@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Builder
 @Table(name = "products")
-@JsonIgnoreProperties({"category"})
+//@JsonIgnoreProperties({"category"})
 public class Product {
 
     @Id
@@ -31,12 +31,15 @@ public class Product {
     private int stockQuantity;
 
     private String description;
+
     private String producer;
+
+    @Column(length = 1000)
     private String imageUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "products"})
-    @JsonIgnore
+//    @JsonIgnore
     private Category category;
 }
