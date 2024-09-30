@@ -3,9 +3,11 @@ package com.demo_shopyy_1;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.data.web.config.EnableSpringDataWebSupport;
 
 @SpringBootApplication
 @ComponentScan(basePackages = "com")
+@EnableSpringDataWebSupport
 public class DemoShopyy1Application {
 
     public static void main(String[] args) {
