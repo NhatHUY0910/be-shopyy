@@ -2,6 +2,7 @@ package com.demo_shopyy_1.service.impl;
 
 import com.demo_shopyy_1.model.Cart;
 import com.demo_shopyy_1.model.User;
+import com.demo_shopyy_1.model.dto.UserUpdateDto;
 import com.demo_shopyy_1.repository.UserRepository;
 import com.demo_shopyy_1.service.UserService;
 import org.slf4j.Logger;
@@ -12,6 +13,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+
 @Service
 public class UserServiceImpl implements UserService {
     private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
@@ -21,6 +24,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private FirebaseStorageService storageService;
 
     @Override
     public User registerUser(String email, String password) {
@@ -68,5 +74,49 @@ public class UserServiceImpl implements UserService {
     @Override
     public User getUserByEmail(String email) {
         return userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    @Override
+    public User updateUser(UserUpdateDto userUpdateDto) throws IOException {
+        User currentUser = getCurrentUser();
+        log.info("Updating user profile for user: {}", currentUser.getEmail());
+
+        if (userUpdateDto.getUsername() != null && !userUpdateDto.getUsername().isEmpty()) {
+            currentUser.setUsername(userUpdateDto.getUsername());
+            log.info("Updated username to: {}", userUpdateDto.getUsername());
+        }
+
+        if (userUpdateDto.getAvatarFile() != null && !userUpdateDto.getAvatarFile().isEmpty()) {
+            try {
+                // Delete old avatar if exists
+                if (currentUser.getAvatarUrl() != null && !currentUser.getAvatarUrl().isEmpty()) {
+                    log.info("Attempting to delete old avatar URL: {}", currentUser.getAvatarUrl());
+                    try {
+                        storageService.deleteFile(currentUser.getAvatarUrl());
+                        log.info("Successfully deleted old avatar");
+                    } catch (Exception e) {
+                        log.warn("Failed to delete old avatar, proceeding with upload anyway. Error: {}", e.getMessage());
+                        // Don't throw here, we still want to try uploading the new avatar
+                    }
+                }
+
+                // Upload new avatar
+                log.info("Attempting to upload new avatar file");
+                String avatarUrl = storageService.uploadFile(userUpdateDto.getAvatarFile());
+                currentUser.setAvatarUrl(avatarUrl);
+                log.info("Successfully uploaded new avatar. New URL: {}", avatarUrl);
+
+            } catch (IOException e) {
+                log.error("Failed to handle avatar file for user: {}. Error: {}", currentUser.getEmail(), e.getMessage(), e);
+                throw new IOException("Failed to upload new avatar file", e);
+            }
+        }
+
+        return userRepository.save(currentUser);
+    }
+
+    private String extractFileNameFromUrl(String url) {
+        // This implementation might need to be adjusted based on your Firebase URL structure
+        return url.substring(url.lastIndexOf('/') + 1, url.indexOf('?'));
     }
 }

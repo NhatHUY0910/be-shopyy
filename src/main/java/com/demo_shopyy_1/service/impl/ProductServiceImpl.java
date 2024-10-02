@@ -104,12 +104,12 @@ public class ProductServiceImpl implements ProductService {
 
             if (productDto.getImageFile() != null && !productDto.getImageFile().isEmpty()) {
                 try {
-                    String newImageUrl = firebaseStorageService.uploadFile(productDto.getImageFile());
-                    // If new image upload is successful, delete the old image
+                    // Delete old image if exists
                     if (product.getImageUrl() != null) {
-                        String oldFileName = extractFileNameFromUrl(product.getImageUrl());
-                        firebaseStorageService.deleteFile(oldFileName);
+                        firebaseStorageService.deleteFile(product.getImageUrl());
                     }
+                    // Upload new image
+                    String newImageUrl = firebaseStorageService.uploadFile(productDto.getImageFile());
                     product.setImageUrl(newImageUrl);
                 } catch (IOException e) {
                     throw new RuntimeException("Failed to upload image file", e);
