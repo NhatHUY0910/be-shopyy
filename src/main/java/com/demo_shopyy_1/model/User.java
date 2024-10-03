@@ -30,6 +30,11 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    private String username;
+
+    @Column(length = 1000)
+    private String avatarUrl;
+
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @JsonIgnore

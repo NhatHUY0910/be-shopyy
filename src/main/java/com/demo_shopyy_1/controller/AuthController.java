@@ -2,6 +2,7 @@ package com.demo_shopyy_1.controller;
 
 import com.demo_shopyy_1.model.User;
 import com.demo_shopyy_1.model.dto.LoginDto;
+import com.demo_shopyy_1.model.dto.UserUpdateDto;
 import com.demo_shopyy_1.security.JwtTokenProvider;
 import com.demo_shopyy_1.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,6 +15,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.management.RuntimeErrorException;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -91,6 +94,28 @@ public class AuthController {
             return ResponseEntity.ok(Map.of("authenticated", true, "user", user));
         } else {
             return ResponseEntity.ok(Map.of("authenticated", false));
+        }
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<?> getUserProfile() {
+        try {
+            User user = userService.getCurrentUser();
+            return ResponseEntity.ok(user);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateUserProfile(@ModelAttribute UserUpdateDto userUpdateDto) {
+        try {
+            User updatedUser = userService.updateUser(userUpdateDto);
+            return ResponseEntity.ok(updatedUser);
+        } catch (IOException e) {
+            return ResponseEntity.badRequest().body("Failed to update user profile: " + e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }

@@ -1,11 +1,16 @@
 package com.demo_shopyy_1.controller;
 
 import com.demo_shopyy_1.model.Product;
+import com.demo_shopyy_1.model.dto.PagedResponseDto;
 import com.demo_shopyy_1.model.dto.ProductDto;
 import com.demo_shopyy_1.service.ProductService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +30,24 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<List<Product>> findAll() {
         return ResponseEntity.ok(productService.getAllProducts());
+    }
+
+    @GetMapping("/paginated")
+    public ResponseEntity<PagedResponseDto<Product>> findAllPaginated(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+        Page<Product> productPage = productService.getProductsPaginated(pageRequest);
+
+        PagedResponseDto<Product> response = new PagedResponseDto<>();
+        response.setContent(productPage.getContent());
+        response.setPageNumber(productPage.getNumber());
+        response.setPageSize(productPage.getSize());
+        response.setTotalElements(productPage.getTotalElements());
+        response.setTotalPages(productPage.getTotalPages());
+        response.setLast(productPage.isLast());
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")

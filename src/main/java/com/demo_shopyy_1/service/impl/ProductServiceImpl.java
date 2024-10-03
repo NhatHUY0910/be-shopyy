@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -40,6 +42,11 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public List<Product> getAllProducts() {
         return productRepository.findAll();
+    }
+
+    @Override
+    public Page<Product> getProductsPaginated(Pageable pageable) {
+        return productRepository.findAll(pageable);
     }
 
     @Override
@@ -97,12 +104,12 @@ public class ProductServiceImpl implements ProductService {
 
             if (productDto.getImageFile() != null && !productDto.getImageFile().isEmpty()) {
                 try {
-                    String newImageUrl = firebaseStorageService.uploadFile(productDto.getImageFile());
-                    // If new image upload is successful, delete the old image
+                    // Delete old image if exists
                     if (product.getImageUrl() != null) {
-                        String oldFileName = extractFileNameFromUrl(product.getImageUrl());
-                        firebaseStorageService.deleteFile(oldFileName);
+                        firebaseStorageService.deleteFile(product.getImageUrl());
                     }
+                    // Upload new image
+                    String newImageUrl = firebaseStorageService.uploadFile(productDto.getImageFile());
                     product.setImageUrl(newImageUrl);
                 } catch (IOException e) {
                     throw new RuntimeException("Failed to upload image file", e);

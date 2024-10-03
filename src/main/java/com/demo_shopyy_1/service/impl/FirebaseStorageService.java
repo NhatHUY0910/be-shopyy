@@ -54,16 +54,58 @@ public class FirebaseStorageService {
         }
     }
 
-    public void deleteFile(String fileName) {
+    public void deleteFile(String fileUrl) {
+        if (fileUrl == null || fileUrl.trim().isEmpty()) {
+            log.warn("Attempted to delete file with null or empty URL");
+            return;
+        }
+
         try {
+            log.info("Attempting to delete file from URL: {}", fileUrl);
+            String fileName = extractFileNameFromUrl(fileUrl);
+            log.info("Extracted file name: {}", fileName);
+
             Storage storage = storageClient.bucket().getStorage();
             BlobId blobId = BlobId.of(storageClient.bucket().getName(), fileName);
+            log.info("Created BlobId: {}", blobId);
+
             boolean deleted = storage.delete(blobId);
             if (!deleted) {
-                throw new RuntimeException("Failed to delete file: " + fileName);
+                log.warn("File does not exist or could not be deleted: {}", fileName);
+                // Không throw exception ở đây nếu file không tồn tại
+                return;
             }
+            log.info("Successfully deleted file: {}", fileName);
         } catch (Exception e) {
-            throw new RuntimeException("An error occurred while deleting the file: " + fileName, e);
+            log.error("Error occurred while deleting file: {}", e.getMessage(), e);
+            // Có thể throw exception hoặc xử lý error tùy thuộc vào yêu cầu
+        }
+    }
+
+    public String extractFileNameFromUrl(String url) {
+        try {
+            log.debug("Extracting filename from URL: {}", url);
+            // Decode URL trước khi xử lý
+            String decodedUrl = java.net.URLDecoder.decode(url, "UTF-8");
+            int lastSlashIndex = decodedUrl.lastIndexOf('/');
+            int questionMarkIndex = decodedUrl.indexOf('?');
+
+            if (lastSlashIndex == -1) {
+                throw new IllegalArgumentException("No slash found in URL");
+            }
+
+            String fileName;
+            if (questionMarkIndex == -1) {
+                fileName = decodedUrl.substring(lastSlashIndex + 1);
+            } else {
+                fileName = decodedUrl.substring(lastSlashIndex + 1, questionMarkIndex);
+            }
+
+            log.debug("Extracted filename: {}", fileName);
+            return fileName;
+        } catch (Exception e) {
+            log.error("Failed to extract filename from URL: {}. Error: {}", url, e.getMessage());
+            throw new IllegalArgumentException("Unable to extract filename from URL: " + e.getMessage());
         }
     }
 
