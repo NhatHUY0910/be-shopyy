@@ -1,7 +1,9 @@
 package com.demo_shopyy_1.controller;
 
+import com.demo_shopyy_1.exception.ResourceNotFoundException;
 import com.demo_shopyy_1.model.Product;
 import com.demo_shopyy_1.model.dto.PagedResponseDto;
+import com.demo_shopyy_1.model.dto.ProductDetailDto;
 import com.demo_shopyy_1.model.dto.ProductDto;
 import com.demo_shopyy_1.service.ProductService;
 import org.slf4j.Logger;
@@ -9,8 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -57,23 +57,57 @@ public class ProductController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping
-    public ResponseEntity<?> createProduct(@RequestPart("imageFile") MultipartFile imageFile, @ModelAttribute ProductDto productDto) {
+    @GetMapping("/{id}/details")
+    public ResponseEntity<ProductDetailDto> getProductDetails(@PathVariable Long id) {
         try {
-            productDto.setImageFile(imageFile);
+            ProductDetailDto productDto = productService.getProductDetails(id);
+            return ResponseEntity.ok(productDto);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping
+    public ResponseEntity<?> createProduct(
+            @RequestPart(value = "imageFiles", required = false) List<MultipartFile> imageFiles,
+            @ModelAttribute ProductDto productDto) {
+
+        if (imageFiles != null) {
+            if (imageFiles.size() > 5) {  // Giới hạn số lượng file
+                return ResponseEntity.badRequest().body("Maximum 5 images allowed");
+            }
+
+            for (MultipartFile file : imageFiles) {
+                if (file.getSize() > 5_000_000) {  // Giới hạn kích thước file (5MB)
+                    return ResponseEntity.badRequest().body("File size should not exceed 5MB");
+                }
+
+                String contentType = file.getContentType();
+                if (contentType == null || !contentType.startsWith("image/")) {
+                    return ResponseEntity.badRequest().body("Only image files are allowed");
+                }
+            }
+        }
+
+        try {
+            productDto.setImageFiles(imageFiles);
             log.info("Received product DTO: {}", productDto);
 
-            if (imageFile != null && !imageFile.isEmpty()) {
-                log.info("Received file: {}, size: {}", imageFile.getOriginalFilename(), imageFile.getSize());
+            if (!imageFiles.isEmpty()) {
+                log.info("Received {} files", imageFiles.size());
+                for (MultipartFile file : imageFiles) {
+                    log.info("File: {}, size: {}", file.getOriginalFilename(), file.getSize());
+                }
             } else {
-                log.warn("No file received");
+                log.warn("No files received");
             }
 
             Product newProduct = productService.createProduct(productDto);
             return ResponseEntity.status(HttpStatus.CREATED).body(newProduct);
         } catch (Exception e) {
             log.error("Error creating product: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error creating product: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Error creating product: " + e.getMessage());
         }
     }
 
