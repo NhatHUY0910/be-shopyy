@@ -1,40 +1,45 @@
 package com.demo_shopyy_1.service.impl;
 
+import com.demo_shopyy_1.exception.ResourceNotFoundException;
 import com.demo_shopyy_1.model.Category;
 import com.demo_shopyy_1.model.Product;
-import com.demo_shopyy_1.model.dto.ProductDto;
+import com.demo_shopyy_1.model.ProductColor;
+import com.demo_shopyy_1.model.dto.*;
 import com.demo_shopyy_1.repository.CategoryRepository;
+import com.demo_shopyy_1.repository.ProductColorRepository;
 import com.demo_shopyy_1.repository.ProductRepository;
 import com.demo_shopyy_1.service.ProductService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ProductServiceImpl implements ProductService {
     private static final Logger log = LoggerFactory.getLogger(ProductServiceImpl.class);
 
-    @Autowired
-    private ProductRepository productRepository;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
-
-    @Autowired
-    private FirebaseStorageService firebaseStorageService;
+    private final ProductRepository productRepository;
+    private final ProductColorRepository productColorRepository;
+    private final CategoryRepository categoryRepository;
+    private final FirebaseStorageService firebaseStorageService;
 
     @Value("${upload.path}")
     private String uploadPath;
@@ -50,44 +55,30 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Cacheable(value = "productCache", key = "#id")
     public Optional<Product> getProductById(Long id) {
         return productRepository.findById(id);
     }
 
     @Override
+    public ProductDetailDto getProductDetails(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id " + id));
+        return mapToDetailDto(product);
+    }
+
+    @Override
+    @Transactional
     public Product createProduct(ProductDto productDto) {
         log.info("Starting product creation process for: {}", productDto.getName());
-        log.info("Image file: {}", productDto.getImageFile() != null ? productDto.getImageFile().getOriginalFilename() : "No file");
 
         Product product = new Product();
         updateProductFromDto(product, productDto);
         log.debug("Updated product details from DTO: {}", product);
 
-        if (productDto.getImageFile() != null && !productDto.getImageFile().isEmpty()) {
-            try {
-                log.info("Uploading file: {}", productDto.getImageFile().getOriginalFilename());
-                String imageUrl = firebaseStorageService.uploadFile(productDto.getImageFile());
-                log.info("File uploaded successfully, URL: {}", imageUrl);
-                product.setImageUrl(imageUrl);
-            } catch (IOException e) {
-                log.error("Failed to upload image file for product: {}", productDto.getName(), e);
-                throw new RuntimeException("Failed to upload image file", e);
-            }
-        } else {
-            log.info("No image file provided for product: {}", productDto.getName());
-        }
-
-        if (productDto.getCategoryId() != null) {
-            try {
-                Category category = categoryRepository.findById(productDto.getCategoryId())
-                        .orElseThrow(() -> new RuntimeException("Category not found"));
-                product.setCategory(category);
-                log.debug("Category set for product: {}", category.getName());
-            } catch (RuntimeException e) {
-                log.error("Category not found for ID: {}", productDto.getCategoryId(), e);
-                throw e;
-            }
-        }
+        processProductImages(product, productDto);
+        processProductColors(product, productDto);
+        setProductCategory(product, productDto);
 
         Product savedProduct = productRepository.save(product);
         log.info("Product created successfully with ID: {}", savedProduct.getId());
@@ -96,39 +87,112 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
     public Product updateProduct(Long id, ProductDto productDto) {
-        Optional<Product> existingProduct = productRepository.findById(id);
-        if (existingProduct.isPresent()) {
-            Product product = existingProduct.get();
-            updateProductFromDto(product, productDto);
-
-            if (productDto.getImageFile() != null && !productDto.getImageFile().isEmpty()) {
-                try {
-                    // Delete old image if exists
-                    if (product.getImageUrl() != null) {
-                        firebaseStorageService.deleteFile(product.getImageUrl());
-                    }
-                    // Upload new image
-                    String newImageUrl = firebaseStorageService.uploadFile(productDto.getImageFile());
-                    product.setImageUrl(newImageUrl);
-                } catch (IOException e) {
-                    throw new RuntimeException("Failed to upload image file", e);
-                }
-            }
-            return productRepository.save(product);
-        }
-        return null;
-    }
-
-    private String extractFileNameFromUrl(String url) {
-        // Implement this method to extract the file name from the Firebase URL
-        // This might depend on how your Firebase URLs are structured
-        return url.substring(url.lastIndexOf('/') + 1);
+        return productRepository.findById(id)
+                .map(existingProduct -> {
+                    updateProductFromDto(existingProduct, productDto);
+                    updateProductColors(existingProduct, productDto);
+                    return productRepository.save(existingProduct);
+                })
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
     }
 
     @Override
     public void deleteProduct(Long id) {
         productRepository.deleteById(id);
+    }
+
+    private void processProductImages(Product product, ProductDto productDto) {
+        if (productDto.getImageFiles() != null && !productDto.getImageFiles().isEmpty()) {
+            try {
+                for (MultipartFile imageFile : productDto.getImageFiles()) {
+                    log.info("Uploading file: {}", imageFile.getOriginalFilename());
+                    String imageUrl = firebaseStorageService.uploadFile(imageFile);
+                    log.info("File uploaded successfully, URL: {}", imageUrl);
+                    product.getImageUrls().add(imageUrl);
+                }
+            } catch (IOException e) {
+                log.error("Failed to upload image files for product: {}", productDto.getName(), e);
+                throw new RuntimeException("Failed to upload image files", e);
+            }
+        } else {
+            log.info("No image files provided for product: {}", productDto.getName());
+        }
+    }
+
+    private void processProductColors(Product product, ProductDto productDto) {
+        if (productDto.getColors() != null && !productDto.getColors().isEmpty()) {
+            for (ProductColorDto colorDto : productDto.getColors()) {
+                try {
+                    ProductColor color = new ProductColor();
+                    color.setName(colorDto.getName());
+
+                    String colorImageUrl = firebaseStorageService.uploadFile(colorDto.getImageFile());
+                    color.setImageUrl(colorImageUrl);
+
+                    ProductColor savedColor = productColorRepository.save(color);
+                    product.getColors().add(savedColor);
+                } catch (IOException e) {
+                    log.error("Failed to upload color image", e);
+                    throw new RuntimeException("Failed to upload color image", e);
+                }
+            }
+        }
+    }
+
+    private void setProductCategory(Product product, ProductDto productDto) {
+        if (productDto.getCategoryId() != null) {
+            Category category = categoryRepository.findById(productDto.getCategoryId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + productDto.getCategoryId()));
+            product.setCategory(category);
+            log.debug("Category set for product: {}", category.getName());
+        }
+    }
+
+    private void updateProductColors(Product existingProduct, ProductDto productDto) {
+        if (productDto.getColors() != null) {
+            existingProduct.getColors().removeIf(color ->
+                    productDto.getColors().stream()
+                            .noneMatch(colorDto -> colorDto.getId() != null && colorDto.getId().equals(color.getId())));
+
+            List<ProductColor> updatedColors = new ArrayList<>();
+            for (ProductColorDto colorDto : productDto.getColors()) {
+                ProductColor color = processColorUpdate(existingProduct, colorDto);
+                updatedColors.add(productColorRepository.save(color));
+            }
+            existingProduct.setColors(new HashSet<>(updatedColors));
+        }
+    }
+
+    private ProductColor processColorUpdate(Product existingProduct, ProductColorDto colorDto) {
+        ProductColor color;
+        if (colorDto.getId() != null) {
+            color = existingProduct.getColors().stream()
+                    .filter(c -> c.getId().equals(colorDto.getId()))
+                    .findFirst()
+                    .orElseGet(ProductColor::new);
+        } else {
+            color = new ProductColor();
+        }
+
+        color.setName(colorDto.getName());
+        updateColorImage(color, colorDto);
+        return color;
+    }
+
+    private void updateColorImage(ProductColor color, ProductColorDto colorDto) {
+        if (colorDto.getImageFile() != null) {
+            try {
+                if (color.getImageUrl() != null) {
+                    firebaseStorageService.deleteFile(color.getImageUrl());
+                }
+                String colorImageUrl = firebaseStorageService.uploadFile(colorDto.getImageFile());
+                color.setImageUrl(colorImageUrl);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to upload color image", e);
+            }
+        }
     }
 
     private void updateProductFromDto(Product product, ProductDto productDto) {
@@ -137,11 +201,41 @@ public class ProductServiceImpl implements ProductService {
         product.setStockQuantity(productDto.getStockQuantity());
         product.setDescription(productDto.getDescription());
         product.setProducer(productDto.getProducer());
+        product.setAvailableSizes(productDto.getAvailableSizes());
+        product.setAvailableWeights(productDto.getAvailableWeights());
 
         if (productDto.getCategoryId() != null) {
-            Category category = categoryRepository.findById(productDto.getCategoryId()).orElseThrow(() -> new RuntimeException("Category not found"));
+            Category category = categoryRepository.findById(productDto.getCategoryId())
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
             product.setCategory(category);
         }
+    }
+
+    private ProductDetailDto mapToDetailDto(Product product) {
+        List<ProductColorDetailDto> colorDtos = product.getColors().stream()
+                .map(color -> ProductColorDetailDto.builder()
+                        .id(color.getId())
+                        .name(color.getName())
+                        .imageUrl(color.getImageUrl())
+                        .build())
+                .collect(Collectors.toList());
+
+        return ProductDetailDto.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .description(product.getDescription())
+                .price(product.getPrice())
+                .stockQuantity(product.getStockQuantity())
+                .imageUrls(product.getImageUrls())
+                .colors(colorDtos)
+                .availableSizes(product.getAvailableSizes())
+                .availableWeights(product.getAvailableWeights())
+                .producer(product.getProducer())
+                .category(product.getCategory() != null ? new CategoryDto(
+                        product.getCategory().getId(),
+                        product.getCategory().getName()
+                ) : null)
+                .build();
     }
 
     private String saveImage(MultipartFile imageFile) {

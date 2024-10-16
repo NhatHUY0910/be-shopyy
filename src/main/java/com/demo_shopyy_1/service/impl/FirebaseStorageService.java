@@ -64,6 +64,10 @@ public class FirebaseStorageService {
             log.info("Attempting to delete file from URL: {}", fileUrl);
             String fileName = extractFileNameFromUrl(fileUrl);
             log.info("Extracted file name: {}", fileName);
+            if (fileName == null) {
+                log.warn("Could not extract filename from URL: {}", fileUrl);
+                return;
+            }
 
             Storage storage = storageClient.bucket().getStorage();
             BlobId blobId = BlobId.of(storageClient.bucket().getName(), fileName);

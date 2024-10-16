@@ -6,6 +6,10 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -32,14 +36,42 @@ public class Product {
 
     private String description;
 
-    private String producer;
+    @ElementCollection
+    @CollectionTable(name = "product_images", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "image_url", length = 1000)
+    private List<String> imageUrls = new ArrayList<>();
 
-    @Column(length = 1000)
-    private String imageUrl;
+    @ManyToMany
+    @JoinTable(
+            name = "product_color_mapping",
+            joinColumns = @JoinColumn(name = "product_id"),
+            inverseJoinColumns = @JoinColumn(name = "color_id")
+    )
+    private Set<ProductColor> colors = new HashSet<>();
+
+    @ElementCollection
+    @CollectionTable(name = "product_sizes", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "size")
+    private Set<String> availableSizes = new HashSet<>();
+
+    @ElementCollection
+    @CollectionTable(name = "product_weights", joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "weight")
+    private Set<String> availableWeights = new HashSet<>();
+
+    private String producer;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "products"})
 //    @JsonIgnore
     private Category category;
+
+    public String getDefaultImageUrl() {
+        // lấy hình ảnh mới nhất
+//        return imageUrls != null && !imageUrls.isEmpty() ? imageUrls.get(imageUrls.size() - 1) : null;
+
+        //lấy hình ảnh đầu tiên
+        return imageUrls != null && !imageUrls.isEmpty() ? imageUrls.get(0) : null;
+    }
 }
