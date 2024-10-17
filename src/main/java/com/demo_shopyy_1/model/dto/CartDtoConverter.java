@@ -26,6 +26,14 @@ public class CartDtoConverter {
         dto.setPrice(item.getProduct().getPrice());
         dto.setImageUrl(item.getProduct().getDefaultImageUrl());
         dto.setStockQuantity(item.getProduct().getStockQuantity());
+
+        // Thêm thông tin về phân loại
+        if (item.getSelectedColor() != null) {
+            dto.setSelectedColorName(item.getSelectedColor().getName());
+        }
+        dto.setSelectedSize(item.getSelectedSize());
+        dto.setSelectedWeight(item.getSelectedWeight());
+
         return dto;
     }
 }

@@ -36,4 +36,14 @@ public class CartItem {
     @Column(nullable = false)
     @Min(value = 1, message = "quantity must be at least 1")
     private Integer quantity;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "color_id")
+    private ProductColor selectedColor;
+
+    @Column(name = "selected_size")
+    private String selectedSize;
+
+    @Column(name = "selected_weight")
+    private String selectedWeight;
 }
