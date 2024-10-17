@@ -1,10 +1,7 @@
 package com.demo_shopyy_1.service.impl;
 
+import com.demo_shopyy_1.model.*;
 import com.demo_shopyy_1.model.dto.CartDtoConverter;
-import com.demo_shopyy_1.model.Cart;
-import com.demo_shopyy_1.model.CartItem;
-import com.demo_shopyy_1.model.Product;
-import com.demo_shopyy_1.model.User;
 import com.demo_shopyy_1.model.dto.AddToCartDto;
 import com.demo_shopyy_1.model.dto.CartDto;
 import com.demo_shopyy_1.repository.CartRepository;
@@ -16,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 @Service
 public class CartServiceImpl implements CartService {
@@ -38,46 +36,76 @@ public class CartServiceImpl implements CartService {
         Product product = productRepository.findById(addToCartDto.getProductId())
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
+        // Validate quantity
         if (addToCartDto.getQuantity() <= 0) {
             throw new RuntimeException("Quantity must be greater than 0");
         }
 
-        if (addToCartDto.getQuantity() > product.getStockQuantity()){
+        if (addToCartDto.getQuantity() > product.getStockQuantity()) {
             throw new RuntimeException("Quantity must be less than or equal to product's quantity");
         }
 
+        // Validate color selection if product has colors
+        ProductColor selectedColor = null;
+        if (!product.getColors().isEmpty()) {
+            if (addToCartDto.getColorId() == null) {
+                throw new RuntimeException("Please select a color for this product");
+            }
+            selectedColor = product.getColors().stream()
+                    .filter(color -> color.getId().equals(addToCartDto.getColorId()))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("Selected color not found"));
+        }
+
+        // Validate size selection if product has sizes
+        if (!product.getAvailableSizes().isEmpty() && addToCartDto.getSize() == null) {
+            throw new RuntimeException("Please select a size for this product");
+        }
+
+        // Validate weight selection if product has weights
+        if (!product.getAvailableWeights().isEmpty() && addToCartDto.getWeight() == null) {
+            throw new RuntimeException("Please select a weight for this product");
+        }
+
+        // Initialize cart if not exists
         Cart cart = user.getCart();
         if (cart == null) {
             cart = new Cart();
             cart.setUser(user);
             cart = cartRepository.save(cart);
             user.setCart(cart);
-            userRepository.save(user);
-//            throw new RuntimeException("User don't have a cart");
         }
 
-        CartItem cartItem = cart.getCartItems().stream()
-                .filter(item -> item.getProduct().getId().equals(product.getId()))
+        // Check if same product with same variants exists in cart
+        CartItem existingItem = cart.getCartItems().stream()
+                .filter(item -> item.getProduct().getId().equals(product.getId())
+                        && Objects.equals(item.getSelectedColor() != null ? item.getSelectedColor().getId() : null,
+                        addToCartDto.getColorId())
+                        && Objects.equals(item.getSelectedSize(), addToCartDto.getSize())
+                        && Objects.equals(item.getSelectedWeight(), addToCartDto.getWeight()))
                 .findFirst()
                 .orElse(null);
 
-        int quantityToAdd = addToCartDto.getQuantity();
-
-        if (cartItem == null) {
-            cartItem = new CartItem();
-            cartItem.setProduct(product);
-            cartItem.setQuantity(addToCartDto.getQuantity());
-//            cart.getCartItems().add(cartItem);
-            cart.addCartItem(cartItem);
-        } else {
-            int newQuantity = cartItem.getQuantity() + addToCartDto.getQuantity();
-            if (newQuantity > product.getStockQuantity()){
-                throw new RuntimeException("Quantity is greater than stock");
+        if (existingItem != null) {
+            // Update quantity of existing item
+            int newQuantity = existingItem.getQuantity() + addToCartDto.getQuantity();
+            if (newQuantity > product.getStockQuantity()) {
+                throw new RuntimeException("Total quantity would exceed available stock");
             }
-            cartItem.setQuantity(newQuantity);
+            existingItem.setQuantity(newQuantity);
+        } else {
+            // Create new cart item
+            CartItem newItem = new CartItem();
+            newItem.setProduct(product);
+            newItem.setQuantity(addToCartDto.getQuantity());
+            newItem.setSelectedColor(selectedColor);
+            newItem.setSelectedSize(addToCartDto.getSize());
+            newItem.setSelectedWeight(addToCartDto.getWeight());
+            cart.addCartItem(newItem);
         }
 
-        product.setStockQuantity(product.getStockQuantity() - quantityToAdd);
+        // Update product stock
+        product.setStockQuantity(product.getStockQuantity() - addToCartDto.getQuantity());
         productRepository.save(product);
 
         Cart savedCart = cartRepository.save(cart);

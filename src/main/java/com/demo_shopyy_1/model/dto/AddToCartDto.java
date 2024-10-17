@@ -17,4 +17,13 @@ public class AddToCartDto {
 
     @JsonProperty("quantity")
     private Integer quantity;
+
+    @JsonProperty("colorId")
+    private Long colorId;
+
+    @JsonProperty("size")
+    private String size;
+
+    @JsonProperty("weight")
+    private String weight;
 }
