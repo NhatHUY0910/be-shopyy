@@ -1,8 +1,7 @@
 package com.demo_shopyy_1.service.impl;
 
 import com.demo_shopyy_1.config.VNPayConfig;
-import com.demo_shopyy_1.model.Order;
-import com.demo_shopyy_1.model.dto.OrderResponseDto;
+import com.demo_shopyy_1.entity.Order;
 import com.demo_shopyy_1.repository.OrderRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;

@@ -1,7 +1,7 @@
-package com.demo_shopyy_1.model.dto;
+package com.demo_shopyy_1.dto;
 
-import com.demo_shopyy_1.model.Cart;
-import com.demo_shopyy_1.model.CartItem;
+import com.demo_shopyy_1.entity.Cart;
+import com.demo_shopyy_1.entity.CartItem;
 import org.springframework.stereotype.Component;
 
 import java.util.stream.Collectors;

@@ -1,9 +1,9 @@
 package com.demo_shopyy_1.controller;
 
-import com.demo_shopyy_1.model.dto.CartDtoConverter;
-import com.demo_shopyy_1.model.User;
-import com.demo_shopyy_1.model.dto.AddToCartDto;
-import com.demo_shopyy_1.model.dto.CartDto;
+import com.demo_shopyy_1.dto.CartDtoConverter;
+import com.demo_shopyy_1.entity.User;
+import com.demo_shopyy_1.dto.AddToCartDto;
+import com.demo_shopyy_1.dto.CartDto;
 import com.demo_shopyy_1.service.CartService;
 import com.demo_shopyy_1.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;

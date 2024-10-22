@@ -1,9 +1,9 @@
 package com.demo_shopyy_1.service.impl;
 
-import com.demo_shopyy_1.model.*;
-import com.demo_shopyy_1.model.dto.CartDtoConverter;
-import com.demo_shopyy_1.model.dto.AddToCartDto;
-import com.demo_shopyy_1.model.dto.CartDto;
+import com.demo_shopyy_1.entity.*;
+import com.demo_shopyy_1.dto.CartDtoConverter;
+import com.demo_shopyy_1.dto.AddToCartDto;
+import com.demo_shopyy_1.dto.CartDto;
 import com.demo_shopyy_1.repository.CartRepository;
 import com.demo_shopyy_1.repository.ProductRepository;
 import com.demo_shopyy_1.repository.UserRepository;

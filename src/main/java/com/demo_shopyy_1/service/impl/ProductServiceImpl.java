@@ -1,26 +1,24 @@
 package com.demo_shopyy_1.service.impl;
 
+import com.demo_shopyy_1.dto.*;
 import com.demo_shopyy_1.exception.ResourceNotFoundException;
-import com.demo_shopyy_1.model.Category;
-import com.demo_shopyy_1.model.Product;
-import com.demo_shopyy_1.model.ProductColor;
-import com.demo_shopyy_1.model.dto.*;
+import com.demo_shopyy_1.entity.Category;
+import com.demo_shopyy_1.entity.Product;
+import com.demo_shopyy_1.entity.ProductColor;
 import com.demo_shopyy_1.repository.CategoryRepository;
 import com.demo_shopyy_1.repository.ProductColorRepository;
 import com.demo_shopyy_1.repository.ProductRepository;
 import com.demo_shopyy_1.service.ProductService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -101,6 +99,27 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public void deleteProduct(Long id) {
         productRepository.deleteById(id);
+    }
+
+    @Override
+    public List<String> getProductNameSuggestions(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Giới hạn 5 gợi ý
+        Pageable limit = PageRequest.of(0, 5);
+        return productRepository.findProductNameSuggestions(keyword.trim(), limit);
+    }
+
+    @Override
+    public Page<Product> searchProducts(String keyword, int page, int size) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return Page.empty();
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+        return productRepository.findByNameContainingIgnoreCase(keyword.trim(), pageable);
     }
 
     private void processProductImages(Product product, ProductDto productDto) {

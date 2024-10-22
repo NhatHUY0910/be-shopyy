@@ -1,4 +1,4 @@
-package com.demo_shopyy_1.model;
+package com.demo_shopyy_1.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

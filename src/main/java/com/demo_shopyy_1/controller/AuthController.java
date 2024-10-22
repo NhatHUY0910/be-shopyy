@@ -1,8 +1,8 @@
 package com.demo_shopyy_1.controller;
 
-import com.demo_shopyy_1.model.User;
-import com.demo_shopyy_1.model.dto.LoginDto;
-import com.demo_shopyy_1.model.dto.UserUpdateDto;
+import com.demo_shopyy_1.entity.User;
+import com.demo_shopyy_1.dto.LoginDto;
+import com.demo_shopyy_1.dto.UserUpdateDto;
 import com.demo_shopyy_1.security.JwtTokenProvider;
 import com.demo_shopyy_1.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,7 +15,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import javax.management.RuntimeErrorException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;

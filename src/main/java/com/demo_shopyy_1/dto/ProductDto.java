@@ -1,6 +1,5 @@
-package com.demo_shopyy_1.model.dto;
+package com.demo_shopyy_1.dto;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

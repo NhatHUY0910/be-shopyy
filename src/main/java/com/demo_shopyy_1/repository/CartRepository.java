@@ -1,6 +1,6 @@
 package com.demo_shopyy_1.repository;
 
-import com.demo_shopyy_1.model.Cart;
+import com.demo_shopyy_1.entity.Cart;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

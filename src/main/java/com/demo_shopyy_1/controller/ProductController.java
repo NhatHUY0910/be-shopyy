@@ -1,10 +1,10 @@
 package com.demo_shopyy_1.controller;
 
 import com.demo_shopyy_1.exception.ResourceNotFoundException;
-import com.demo_shopyy_1.model.Product;
-import com.demo_shopyy_1.model.dto.PagedResponseDto;
-import com.demo_shopyy_1.model.dto.ProductDetailDto;
-import com.demo_shopyy_1.model.dto.ProductDto;
+import com.demo_shopyy_1.entity.Product;
+import com.demo_shopyy_1.dto.PagedResponseDto;
+import com.demo_shopyy_1.dto.ProductDetailDto;
+import com.demo_shopyy_1.dto.ProductDto;
 import com.demo_shopyy_1.service.ProductService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,11 +16,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Collections;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/products")
-//@CrossOrigin("*")
 public class ProductController {
     private static final Logger log = LoggerFactory.getLogger(ProductController.class);
 
@@ -35,19 +35,27 @@ public class ProductController {
     @GetMapping("/paginated")
     public ResponseEntity<PagedResponseDto<Product>> findAllPaginated(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size) {
-        PageRequest pageRequest = PageRequest.of(page, size);
-        Page<Product> productPage = productService.getProductsPaginated(pageRequest);
+            @RequestParam(defaultValue = "5") int size
+    ) {
+        try {
+            if (page < 0) page = 0;
+            if (size <= 0) size = 5;
 
-        PagedResponseDto<Product> response = new PagedResponseDto<>();
-        response.setContent(productPage.getContent());
-        response.setPageNumber(productPage.getNumber());
-        response.setPageSize(productPage.getSize());
-        response.setTotalElements(productPage.getTotalElements());
-        response.setTotalPages(productPage.getTotalPages());
-        response.setLast(productPage.isLast());
+            PageRequest pageRequest = PageRequest.of(page, size);
+            Page<Product> productPage = productService.getProductsPaginated(pageRequest);
 
-        return ResponseEntity.ok(response);
+            PagedResponseDto<Product> response = new PagedResponseDto<>();
+            response.setContent(productPage.getContent());
+            response.setPageNumber(productPage.getNumber());
+            response.setPageSize(productPage.getSize());
+            response.setTotalElements(productPage.getTotalElements());
+            response.setTotalPages(productPage.getTotalPages());
+            response.setLast(productPage.isLast());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @GetMapping("/{id}")
@@ -124,5 +132,39 @@ public class ProductController {
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/suggestions")
+    public ResponseEntity<List<String>> getProductSuggestions(
+            @RequestParam(required = false) String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return ResponseEntity.ok(Collections.emptyList());
+        }
+
+        List<String> suggestions = productService.getProductNameSuggestions(keyword);
+        return ResponseEntity.ok(suggestions);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<PagedResponseDto<Product>> searchProducts(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return ResponseEntity.ok(new PagedResponseDto<>());
+        }
+
+        Page<Product> productPage = productService.searchProducts(keyword, page, size);
+
+        PagedResponseDto<Product> response = new PagedResponseDto<>();
+        response.setContent(productPage.getContent());
+        response.setPageNumber(productPage.getNumber());
+        response.setPageSize(productPage.getSize());
+        response.setTotalElements(productPage.getTotalElements());
+        response.setTotalPages(productPage.getTotalPages());
+        response.setLast(productPage.isLast());
+
+        return ResponseEntity.ok(response);
     }
 }
