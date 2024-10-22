@@ -1,4 +1,4 @@
-package com.demo_shopyy_1.model.dto;
+package com.demo_shopyy_1.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

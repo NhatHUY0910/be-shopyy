@@ -1,6 +1,6 @@
 package com.demo_shopyy_1.controller;
 
-import com.demo_shopyy_1.model.Category;
+import com.demo_shopyy_1.entity.Category;
 import com.demo_shopyy_1.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

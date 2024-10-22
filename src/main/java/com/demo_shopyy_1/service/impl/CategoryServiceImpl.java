@@ -1,7 +1,7 @@
 package com.demo_shopyy_1.service.impl;
 
-import com.demo_shopyy_1.model.Category;
-import com.demo_shopyy_1.model.dto.CategoryDto;
+import com.demo_shopyy_1.entity.Category;
+import com.demo_shopyy_1.dto.CategoryDto;
 import com.demo_shopyy_1.repository.CategoryRepository;
 import com.demo_shopyy_1.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;

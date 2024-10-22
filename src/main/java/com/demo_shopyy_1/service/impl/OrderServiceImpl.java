@@ -1,12 +1,12 @@
 package com.demo_shopyy_1.service.impl;
 
-import com.demo_shopyy_1.model.Order;
-import com.demo_shopyy_1.model.OrderItem;
-import com.demo_shopyy_1.model.Product;
-import com.demo_shopyy_1.model.User;
-import com.demo_shopyy_1.model.dto.CreateOrderRequestDto;
-import com.demo_shopyy_1.model.dto.OrderItemDto;
-import com.demo_shopyy_1.model.dto.OrderResponseDto;
+import com.demo_shopyy_1.entity.Order;
+import com.demo_shopyy_1.entity.OrderItem;
+import com.demo_shopyy_1.entity.Product;
+import com.demo_shopyy_1.entity.User;
+import com.demo_shopyy_1.dto.CreateOrderRequestDto;
+import com.demo_shopyy_1.dto.OrderItemDto;
+import com.demo_shopyy_1.dto.OrderResponseDto;
 import com.demo_shopyy_1.repository.OrderRepository;
 import com.demo_shopyy_1.repository.ProductRepository;
 import com.demo_shopyy_1.repository.UserRepository;

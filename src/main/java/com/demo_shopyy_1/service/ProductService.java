@@ -1,8 +1,8 @@
 package com.demo_shopyy_1.service;
 
-import com.demo_shopyy_1.model.Product;
-import com.demo_shopyy_1.model.dto.ProductDetailDto;
-import com.demo_shopyy_1.model.dto.ProductDto;
+import com.demo_shopyy_1.entity.Product;
+import com.demo_shopyy_1.dto.ProductDetailDto;
+import com.demo_shopyy_1.dto.ProductDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -17,4 +17,6 @@ public interface ProductService {
     Product createProduct(ProductDto productDto);
     Product updateProduct(Long id, ProductDto productDto);
     void deleteProduct(Long id);
+    List<String> getProductNameSuggestions(String keyword);
+    Page<Product> searchProducts(String keyword, int page, int size);
 }

@@ -1,6 +1,5 @@
-package com.demo_shopyy_1.model;
+package com.demo_shopyy_1.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
@@ -47,6 +46,7 @@ public class Product {
             joinColumns = @JoinColumn(name = "product_id"),
             inverseJoinColumns = @JoinColumn(name = "color_id")
     )
+    @JsonIgnoreProperties({"products"})
     private Set<ProductColor> colors = new HashSet<>();
 
     @ElementCollection
@@ -63,8 +63,7 @@ public class Product {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "products"})
-//    @JsonIgnore
+    @JsonIgnoreProperties({"products"})
     private Category category;
 
     public String getDefaultImageUrl() {

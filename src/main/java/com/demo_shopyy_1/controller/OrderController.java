@@ -1,7 +1,7 @@
 package com.demo_shopyy_1.controller;
 
-import com.demo_shopyy_1.model.dto.CreateOrderRequestDto;
-import com.demo_shopyy_1.model.dto.OrderResponseDto;
+import com.demo_shopyy_1.dto.CreateOrderRequestDto;
+import com.demo_shopyy_1.dto.OrderResponseDto;
 import com.demo_shopyy_1.service.UserService;
 import com.demo_shopyy_1.service.OrderService;
 import com.demo_shopyy_1.service.impl.VNPayService;

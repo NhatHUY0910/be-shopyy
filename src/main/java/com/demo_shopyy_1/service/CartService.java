@@ -1,8 +1,8 @@
 package com.demo_shopyy_1.service;
 
-import com.demo_shopyy_1.model.User;
-import com.demo_shopyy_1.model.dto.AddToCartDto;
-import com.demo_shopyy_1.model.dto.CartDto;
+import com.demo_shopyy_1.entity.User;
+import com.demo_shopyy_1.dto.AddToCartDto;
+import com.demo_shopyy_1.dto.CartDto;
 
 public interface CartService {
     CartDto addToCart(User user, AddToCartDto addToCartDto);

@@ -1,7 +1,7 @@
 package com.demo_shopyy_1.service;
 
-import com.demo_shopyy_1.model.User;
-import com.demo_shopyy_1.model.dto.UserUpdateDto;
+import com.demo_shopyy_1.entity.User;
+import com.demo_shopyy_1.dto.UserUpdateDto;
 
 import java.io.IOException;
 

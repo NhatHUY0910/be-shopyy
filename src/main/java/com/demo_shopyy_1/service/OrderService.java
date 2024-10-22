@@ -1,10 +1,8 @@
 package com.demo_shopyy_1.service;
 
-import com.demo_shopyy_1.model.Order;
-import com.demo_shopyy_1.model.User;
-import com.demo_shopyy_1.model.dto.CreateOrderDto;
-import com.demo_shopyy_1.model.dto.CreateOrderRequestDto;
-import com.demo_shopyy_1.model.dto.OrderResponseDto;
+import com.demo_shopyy_1.entity.Order;
+import com.demo_shopyy_1.dto.CreateOrderRequestDto;
+import com.demo_shopyy_1.dto.OrderResponseDto;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.UnsupportedEncodingException;

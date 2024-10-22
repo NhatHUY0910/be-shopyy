@@ -1,6 +1,6 @@
-package com.demo_shopyy_1.model.dto;
+package com.demo_shopyy_1.dto;
 
-import com.demo_shopyy_1.model.Order;
+import com.demo_shopyy_1.entity.Order;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

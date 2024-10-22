@@ -1,8 +1,8 @@
 package com.demo_shopyy_1.service.impl;
 
-import com.demo_shopyy_1.model.Cart;
-import com.demo_shopyy_1.model.User;
-import com.demo_shopyy_1.model.dto.UserUpdateDto;
+import com.demo_shopyy_1.entity.Cart;
+import com.demo_shopyy_1.entity.User;
+import com.demo_shopyy_1.dto.UserUpdateDto;
 import com.demo_shopyy_1.repository.UserRepository;
 import com.demo_shopyy_1.service.UserService;
 import org.slf4j.Logger;
