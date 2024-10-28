@@ -5,6 +5,7 @@ import com.demo_shopyy_1.entity.Product;
 import com.demo_shopyy_1.dto.PagedResponseDto;
 import com.demo_shopyy_1.dto.ProductDetailDto;
 import com.demo_shopyy_1.dto.ProductDto;
+import com.demo_shopyy_1.repository.CategoryRepository;
 import com.demo_shopyy_1.service.ProductService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +27,9 @@ public class ProductController {
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
 
     @GetMapping
     public ResponseEntity<List<Product>> findAll() {
@@ -58,12 +62,12 @@ public class ProductController {
         }
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Product> findById(@PathVariable Long id) {
-        return productService.getProductById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
+//    @GetMapping("/{id}")
+//    public ResponseEntity<Product> findById(@PathVariable Long id) {
+//        return productService.getProductById(id)
+//                .map(ResponseEntity::ok)
+//                .orElse(ResponseEntity.notFound().build());
+//    }
 
     @GetMapping("/{id}/details")
     public ResponseEntity<ProductDetailDto> getProductDetails(@PathVariable Long id) {
@@ -121,6 +125,13 @@ public class ProductController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Product> updateProduct(@PathVariable Long id, @ModelAttribute ProductDto productDto) {
+        log.info("Updating product with id: {}", id);
+        if (productDto.getImageFiles() != null) {
+            log.info("Number of image files: {}", productDto.getImageFiles().size());
+            productDto.getImageFiles().forEach(file ->
+                    log.info("File: {}, size: {}", file.getOriginalFilename(), file.getSize())
+            );
+        }
         Product updatedProduct = productService.updateProduct(id, productDto);
         if (updatedProduct != null) {
             return ResponseEntity.ok(updatedProduct);
@@ -166,5 +177,46 @@ public class ProductController {
         response.setLast(productPage.isLast());
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<List<Product>> getProductsByCategory(@PathVariable Long categoryId) {
+        if (categoryId == null || categoryId <= 0) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        if (!categoryRepository.existsById(categoryId)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<Product> products = productService.getProductsByCategory(categoryId);
+        return ResponseEntity.ok(products);
+    }
+
+    @GetMapping("/category/{categoryId}/paginated")
+    public ResponseEntity<PagedResponseDto<Product>> getProductsByCategoryPaginated(
+            @PathVariable Long categoryId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size
+    ) {
+        try {
+            if (page < 0) page = 0;
+            if (size <= 0) size = 5;
+
+            PageRequest pageRequest = PageRequest.of(page, size);
+            Page<Product> productPage = productService.getProductsByCategoryPaginated(categoryId, pageRequest);
+
+            PagedResponseDto<Product> response = new PagedResponseDto<>();
+            response.setContent(productPage.getContent());
+            response.setPageNumber(productPage.getNumber());
+            response.setPageSize(productPage.getSize());
+            response.setTotalElements(productPage.getTotalElements());
+            response.setTotalPages(productPage.getTotalPages());
+            response.setLast(productPage.isLast());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }
