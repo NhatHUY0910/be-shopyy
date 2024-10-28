@@ -19,4 +19,6 @@ public interface ProductService {
     void deleteProduct(Long id);
     List<String> getProductNameSuggestions(String keyword);
     Page<Product> searchProducts(String keyword, int page, int size);
+    List<Product> getProductsByCategory(Long categoryId);
+    Page<Product> getProductsByCategoryPaginated(Long categoryId, Pageable pageable);
 }

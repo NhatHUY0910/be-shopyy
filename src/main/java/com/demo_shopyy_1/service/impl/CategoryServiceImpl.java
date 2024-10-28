@@ -5,6 +5,8 @@ import com.demo_shopyy_1.dto.CategoryDto;
 import com.demo_shopyy_1.repository.CategoryRepository;
 import com.demo_shopyy_1.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -40,5 +42,10 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public void deleteCategory(Long id) {
+    }
+
+    @Override
+    public Page<Category> getCategoriesPaginated(Pageable pageable) {
+        return categoryRepository.findAll(pageable);
     }
 }

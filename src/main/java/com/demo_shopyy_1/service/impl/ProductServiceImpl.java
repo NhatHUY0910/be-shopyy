@@ -89,6 +89,17 @@ public class ProductServiceImpl implements ProductService {
     public Product updateProduct(Long id, ProductDto productDto) {
         return productRepository.findById(id)
                 .map(existingProduct -> {
+                    // Xóa các hình ảnh cũ nếu có hình ảnh mới được tải lên
+                    if (productDto.getImageFiles() != null && !productDto.getImageFiles().isEmpty()) {
+                        // Xóa các hình ảnh cũ từ Firebase Storage
+                        for (String oldImageUrl : existingProduct.getImageUrls()) {
+                            firebaseStorageService.deleteFile(oldImageUrl);
+                        }
+                        existingProduct.getImageUrls().clear();
+                        // Xử lý và tải lên hình ảnh mới
+                        processProductImages(existingProduct, productDto);
+                    }
+
                     updateProductFromDto(existingProduct, productDto);
                     updateProductColors(existingProduct, productDto);
                     return productRepository.save(existingProduct);
@@ -122,14 +133,26 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.findByNameContainingIgnoreCase(keyword.trim(), pageable);
     }
 
+    @Override
+    public List<Product> getProductsByCategory(Long categoryId) {
+        return productRepository.findByCategoryId(categoryId);
+    }
+
+    @Override
+    public Page<Product> getProductsByCategoryPaginated(Long categoryId, Pageable pageable) {
+        return productRepository.findByCategoryId(categoryId, pageable);
+    }
+
     private void processProductImages(Product product, ProductDto productDto) {
         if (productDto.getImageFiles() != null && !productDto.getImageFiles().isEmpty()) {
             try {
                 for (MultipartFile imageFile : productDto.getImageFiles()) {
-                    log.info("Uploading file: {}", imageFile.getOriginalFilename());
-                    String imageUrl = firebaseStorageService.uploadFile(imageFile);
-                    log.info("File uploaded successfully, URL: {}", imageUrl);
-                    product.getImageUrls().add(imageUrl);
+                    if (imageFile != null && !imageFile.isEmpty()) {  // Thêm kiểm tra này
+                        log.info("Uploading file: {}", imageFile.getOriginalFilename());
+                        String imageUrl = firebaseStorageService.uploadFile(imageFile);
+                        log.info("File uploaded successfully, URL: {}", imageUrl);
+                        product.getImageUrls().add(imageUrl);
+                    }
                 }
             } catch (IOException e) {
                 log.error("Failed to upload image files for product: {}", productDto.getName(), e);
