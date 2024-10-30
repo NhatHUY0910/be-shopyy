@@ -47,4 +47,6 @@ public class ProductDto {
 
 //    @Pattern(regexp = "^\\d+(\\.\\d{1,2})?\\s*(g|kg|oz|lb)$", message = "Invalid weight format")
     private Set<String> availableWeights;
+
+    private List<String> existingImageUrls;
 }

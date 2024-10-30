@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -53,4 +54,22 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Order> orders = new ArrayList<>();
+
+    @Column(name = "reset_code")
+    private String resetCode;
+
+    @Column(name = "reset_code_expiry")
+    private LocalDateTime resetCodeExpiry;
+
+    public boolean isResetCodeValid() {
+        return
+                this.resetCode != null &&
+                        this.resetCodeExpiry != null &&
+                        LocalDateTime.now().isBefore(this.resetCodeExpiry);
+    }
+
+    public void clearResetCode() {
+        this.resetCode = null;
+        this.resetCodeExpiry = null;
+    }
 }
