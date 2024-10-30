@@ -12,7 +12,7 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
-
+    User findUserByEmail(String email);
     User getUserByEmail(String email);
 
     @Query("select r.name from User u join u.roles r where u.email = :email")

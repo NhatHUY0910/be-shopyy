@@ -89,13 +89,27 @@ public class ProductServiceImpl implements ProductService {
     public Product updateProduct(Long id, ProductDto productDto) {
         return productRepository.findById(id)
                 .map(existingProduct -> {
-                    // Xóa các hình ảnh cũ nếu có hình ảnh mới được tải lên
+                    // Chỉ xóa và cập nhật ảnh khi có file mới được tải lên
                     if (productDto.getImageFiles() != null && !productDto.getImageFiles().isEmpty()) {
-                        // Xóa các hình ảnh cũ từ Firebase Storage
-                        for (String oldImageUrl : existingProduct.getImageUrls()) {
-                            firebaseStorageService.deleteFile(oldImageUrl);
-                        }
+                        // Giữ lại các URL ảnh cũ nếu chúng vẫn còn trong existingImageUrls
+                        List<String> urlsToKeep = productDto.getExistingImageUrls() != null ?
+                                productDto.getExistingImageUrls() : new ArrayList<>();
+
+                        // Xóa chỉ những ảnh không còn được sử dụng
+                        existingProduct.getImageUrls().stream()
+                                .filter(url -> !urlsToKeep.contains(url))
+                                .forEach(url -> {
+                                    try {
+                                        firebaseStorageService.deleteFile(url);
+                                    } catch (Exception e) {
+                                        log.error("Error deleting file: " + url, e);
+                                    }
+                                });
+
+                        // Cập nhật danh sách URL
                         existingProduct.getImageUrls().clear();
+                        existingProduct.getImageUrls().addAll(urlsToKeep);
+
                         // Xử lý và tải lên hình ảnh mới
                         processProductImages(existingProduct, productDto);
                     }
@@ -194,13 +208,33 @@ public class ProductServiceImpl implements ProductService {
 
     private void updateProductColors(Product existingProduct, ProductDto productDto) {
         if (productDto.getColors() != null) {
-            existingProduct.getColors().removeIf(color ->
-                    productDto.getColors().stream()
-                            .noneMatch(colorDto -> colorDto.getId() != null && colorDto.getId().equals(color.getId())));
+            // Tạo map của các màu hiện có
+            Map<Long, ProductColor> existingColors = existingProduct.getColors().stream()
+                    .collect(Collectors.toMap(ProductColor::getId, color -> color));
 
             List<ProductColor> updatedColors = new ArrayList<>();
             for (ProductColorDto colorDto : productDto.getColors()) {
-                ProductColor color = processColorUpdate(existingProduct, colorDto);
+                ProductColor color;
+                if (colorDto.getId() != null && existingColors.containsKey(colorDto.getId())) {
+                    // Cập nhật màu hiện có
+                    color = existingColors.get(colorDto.getId());
+                    color.setName(colorDto.getName());
+
+                    // Chỉ cập nhật ảnh nếu có file mới
+                    if (colorDto.getImageFile() != null && !colorDto.getImageFile().isEmpty()) {
+                        updateColorImage(color, colorDto);
+                    }
+                } else {
+                    // Thêm màu mới
+                    color = new ProductColor();
+                    color.setName(colorDto.getName());
+                    if (colorDto.getImageFile() != null && !colorDto.getImageFile().isEmpty()) {
+                        updateColorImage(color, colorDto);
+                    } else if (colorDto.getImageUrl() != null && !colorDto.getImageUrl().isEmpty()) {
+                        // Giữ lại URL ảnh cũ nếu không có file mới
+                        color.setImageUrl(colorDto.getImageUrl());
+                    }
+                }
                 updatedColors.add(productColorRepository.save(color));
             }
             existingProduct.setColors(new HashSet<>(updatedColors));

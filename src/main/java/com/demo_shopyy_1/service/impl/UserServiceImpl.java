@@ -115,6 +115,34 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(currentUser);
     }
 
+    @Override
+    public User updateUserEntity(User user) {
+        return userRepository.save(user);
+    }
+
+    @Override
+    public void changePassword(String email, String currentPassword, String newPassword) {
+        User user = userRepository.findUserByEmail(email);
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new RuntimeException("Current password is incorrect");
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
+    @Override
+    public void setNewPassword(String email, String newPassword) {
+        User user = userRepository.findUserByEmail(email);
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
     private String extractFileNameFromUrl(String url) {
         // This implementation might need to be adjusted based on your Firebase URL structure
         return url.substring(url.lastIndexOf('/') + 1, url.indexOf('?'));
