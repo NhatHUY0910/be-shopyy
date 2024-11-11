@@ -6,6 +6,9 @@ import com.demo_shopyy_1.dto.UserUpdateDto;
 import com.demo_shopyy_1.security.JwtTokenProvider;
 import com.demo_shopyy_1.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -21,17 +24,13 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
-//@CrossOrigin(value = "*")
+@RequiredArgsConstructor
 public class AuthController {
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
-
-    @Autowired
-    private UserService userService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final UserService userService;
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody User user) {
@@ -69,9 +68,21 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logoutUser(HttpServletRequest request) {
-        SecurityContextHolder.clearContext();
-        return ResponseEntity.ok("User logged out successfully");
+    public ResponseEntity<?> logoutUser(@RequestHeader("Authorization") String token) {
+        logger.info("Logout request received");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+            try {
+                userService.logout(token);
+                logger.info("User logged out successfully");
+                return ResponseEntity.ok("Logged out successfully");
+            } catch (Exception e) {
+                logger.error("Error during logout: {}", e.getMessage());
+                return ResponseEntity.badRequest().body("Logout failed: " + e.getMessage());
+            }
+        }
+        logger.warn("Invalid token received for logout");
+        return ResponseEntity.badRequest().body("Invalid token");
     }
 
 //    @GetMapping("/check-login")

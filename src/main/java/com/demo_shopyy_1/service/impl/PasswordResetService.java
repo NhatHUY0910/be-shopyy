@@ -2,7 +2,7 @@ package com.demo_shopyy_1.service.impl;
 
 import com.demo_shopyy_1.entity.User;
 import com.demo_shopyy_1.service.UserService;
-import com.demo_shopyy_1.service.UsersEmailService;
+import com.demo_shopyy_1.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +16,7 @@ public class PasswordResetService {
     private UserService userService;
 
     @Autowired
-    private UsersEmailService usersEmailService;
+    private EmailService emailService;
 
     private final Random random = new Random();
 
@@ -35,7 +35,7 @@ public class PasswordResetService {
         user.setResetCodeExpiry(LocalDateTime.now().plusMinutes(3));
         userService.updateUserEntity(user);
 
-        usersEmailService.sendPasswordResetEmail(user.getEmail(), resetCode);
+        emailService.sendPasswordResetEmail(user.getEmail(), resetCode);
     }
 
     public boolean verifyResetCode(String email, String resetCode) {

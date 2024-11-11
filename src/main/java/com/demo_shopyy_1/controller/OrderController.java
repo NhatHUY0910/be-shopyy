@@ -24,9 +24,6 @@ public class OrderController {
     private OrderService orderService;
 
     @Autowired
-    private UserService userService;
-
-    @Autowired
     private VNPayService vnPayService;
 
     @PostMapping

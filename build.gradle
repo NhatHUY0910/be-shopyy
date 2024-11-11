@@ -41,6 +41,7 @@ dependencies {
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'com.mysql:mysql-connector-j'
     annotationProcessor 'org.projectlombok:lombok'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 
     implementation group: 'org.modelmapper', name: 'modelmapper', version: '2.3.8'
     testImplementation 'org.springframework.security:spring-security-test'

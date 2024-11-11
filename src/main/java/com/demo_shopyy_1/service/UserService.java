@@ -8,6 +8,7 @@ import java.io.IOException;
 public interface UserService {
     User registerUser(String email, String password);
     User loginUser(String email, String password);
+    void logout(String token);
     User getCurrentUser();
     User getUserByEmail(String email);
     User updateUser(UserUpdateDto userUpdateDto) throws IOException;

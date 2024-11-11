@@ -4,6 +4,7 @@ import com.demo_shopyy_1.entity.Cart;
 import com.demo_shopyy_1.entity.CartItem;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
@@ -24,9 +25,11 @@ public class CartDtoConverter {
         dto.setProductName(item.getProduct().getName());
         dto.setQuantity(item.getQuantity());
         dto.setPrice(item.getProduct().getPrice());
-        dto.setImageUrl(item.getProduct().getDefaultImageUrl());
-        dto.setStockQuantity(item.getProduct().getStockQuantity());
 
+        List<String> imageUrls = item.getProduct().getImageUrls();
+        dto.setImageUrl(imageUrls != null && !imageUrls.isEmpty() ? imageUrls.get(0) : null);
+
+        dto.setStockQuantity(item.getProduct().getStockQuantity());
         // Thêm thông tin về phân loại
         if (item.getSelectedColor() != null) {
             dto.setSelectedColorName(item.getSelectedColor().getName());

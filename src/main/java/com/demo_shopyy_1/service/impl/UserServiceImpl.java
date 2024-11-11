@@ -4,7 +4,9 @@ import com.demo_shopyy_1.entity.Cart;
 import com.demo_shopyy_1.entity.User;
 import com.demo_shopyy_1.dto.UserUpdateDto;
 import com.demo_shopyy_1.repository.UserRepository;
+import com.demo_shopyy_1.security.JwtTokenProvider;
 import com.demo_shopyy_1.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,17 +18,14 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private FirebaseStorageService storageService;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final FirebaseStorageService storageService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Override
     public User registerUser(String email, String password) {
@@ -52,6 +51,13 @@ public class UserServiceImpl implements UserService {
             throw  new RuntimeException("Wrong password");
         }
         return user;
+    }
+
+    @Override
+    public void logout(String token) {
+        jwtTokenProvider.invalidateToken(token);
+        SecurityContextHolder.clearContext();
+        log.info("User logged out successfully");
     }
 
     @Override

@@ -4,6 +4,7 @@ import com.demo_shopyy_1.config.VNPayConfig;
 import com.demo_shopyy_1.entity.Order;
 import com.demo_shopyy_1.repository.OrderRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,14 +19,12 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Service
+@RequiredArgsConstructor
 public class VNPayService {
     private static final Logger logger = LoggerFactory.getLogger(VNPayService.class);
 
-    @Autowired
-    private VNPayConfig vnPayConfig;
-
-    @Autowired
-    private OrderRepository orderRepository;
+    private final VNPayConfig vnPayConfig;
+    private final OrderRepository orderRepository;
 
     public String createPaymentUrl(HttpServletRequest request, Order order) throws UnsupportedEncodingException {
         String vnp_Version = "2.1.0";
