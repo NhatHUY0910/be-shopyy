@@ -1,6 +1,6 @@
 package com.demo_shopyy_1.service.impl;
 
-import com.demo_shopyy_1.service.UsersEmailService;
+import com.demo_shopyy_1.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
@@ -8,7 +8,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 @Service
-public class UsersEmailServiceImpl implements UsersEmailService {
+public class EmailServiceImpl implements EmailService {
 
     @Autowired
     private JavaMailSender mailSender;
